@@ -142,8 +142,8 @@ body {
 }
 
 .start-icon-cell {
-    width: 44px;
-    height: 44px;
+    width: 20px;
+    height: 20px;
     border-radius: 10px;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -211,14 +211,15 @@ body {
 
 .start-title {
     font-family: var(--mono);
-    font-size: 32px;
-    font-weight: 900;
+    font-size: 24px;
+    font-weight: 500;
     letter-spacing: -0.5px;
     line-height: 1;
     background: linear-gradient(135deg, var(--acc), var(--acc2));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-transform: capitalize;
     text-align: center;
 }
 
@@ -226,7 +227,7 @@ body {
     font-size: 13px;
     color: var(--muted);
     letter-spacing: 2px;
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
     font-family: var(--mono);
     margin-top: 4px;
 }
@@ -242,15 +243,18 @@ body {
 
 .start-btn {
     width: 100%;
-    max-width: 280px;
-    padding: 18px 32px;
+    max-width: 130px;
+    gap: 6px;
+    align-items: center;
+    display: flex;
+    padding: 13px 12px;
     background: linear-gradient(135deg, var(--acc), var(--acc2));
     border: none;
-    border-radius: 16px;
+    border-radius: 6px;
     color: #fff;
     font-family: var(--mono);
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 400;
     letter-spacing: 2px;
     cursor: pointer;
     box-shadow: 0 8px 32px var(--glow), 0 2px 0 rgba(255, 255, 255, 0.15) inset;
@@ -310,6 +314,55 @@ body {
 
 .diff-opt:active {
     transform: scale(0.95);
+}
+
+/* Status Chip */
+.status-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 12px;
+}
+
+.chip-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.chip-val {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--acc);
+    font-weight: 700;
+}
+
+.start-btns-row {
+    width: 100%;
+    justify-content: center;
+    /* max-width: 130px; */
+    display: flex;
+    /* flex-direction: column; */
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.start-btn.secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: var(--text);
+}
+
+.start-btn.secondary:hover {
+    background: var(--surf2);
+    border-color: var(--border2);
 }
 
 .best-score-row {
@@ -505,7 +558,7 @@ body {
     border-radius: 99px;
     font-family: var(--mono);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 1px;
     box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
     z-index: 50;
@@ -680,9 +733,36 @@ body {
     75% {
         transform: translateX(-3px)
     }
+}
 
-    90% {
-        transform: translateX(3px)
+/* ── DEAD END HIGHLIGHTS ── */
+.arr-tile.dead-end {
+    border-color: rgba(244, 63, 94, 0.45) !important;
+    background: rgba(244, 63, 94, 0.05) !important;
+    box-shadow: inset 0 0 10px rgba(244, 63, 94, 0.05) !important;
+}
+
+.arr-tile.dead-end i {
+    color: rgba(244, 63, 94, 0.7) !important;
+}
+
+/* When a move CREATES a new dead-end */
+.arr-tile.dead-end-new {
+    animation: shake .36s cubic-bezier(.36, .07, .19, .97), dead-end-pulse .8s ease forwards;
+    z-index: 10;
+}
+
+@keyframes dead-end-pulse {
+    0% {
+        border-color: rgba(244, 63, 94, 1);
+        box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.4), 0 0 30px rgba(244, 63, 94, 0.5);
+        background: rgba(244, 63, 94, 0.25);
+    }
+
+    100% {
+        border-color: rgba(244, 63, 94, 0.45);
+        box-shadow: inset 0 0 10px rgba(244, 63, 94, 0.05);
+        background: rgba(244, 63, 94, 0.05);
     }
 }
 
@@ -788,7 +868,7 @@ body {
     color: #fff;
     font-family: var(--mono);
     font-size: 8px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 1px;
     padding: 4px 8px;
     border-radius: 6px;
@@ -832,23 +912,24 @@ body {
 
 /* Snake removal: segments animate out sequentially */
 .arr-tile.removing-snake {
-    animation: snake-remove .28s cubic-bezier(.4, 0, .2, 1) forwards;
+    animation: snake-remove .45s cubic-bezier(.25, .8, .25, 1) forwards;
+    will-change: transform, opacity;
 }
 
 @keyframes snake-remove {
     0% {
-        transform: scale(1.15);
+        transform: translate(0, 0);
         opacity: 1;
-        background: rgba(0, 212, 255, 0.2);
     }
 
-    40% {
-        transform: scale(1.3);
-        opacity: 0.7;
+    70% {
+        transform: translate(var(--slide-x), var(--slide-y));
+        opacity: 0.9;
     }
 
     100% {
-        transform: scale(0);
+        transform: translate(calc(var(--slide-x) * 1.4),
+                calc(var(--slide-y) * 1.4));
         opacity: 0;
     }
 }
@@ -858,11 +939,15 @@ body {
 }
 
 @keyframes board-stuck-flash {
-    0%, 100% {
+
+    0%,
+    100% {
         border-color: rgba(255, 255, 255, 0.055);
         box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
     }
-    20%, 80% {
+
+    20%,
+    80% {
         border-color: rgba(244, 63, 94, 0.8);
         box-shadow: 0 0 30px rgba(244, 63, 94, 0.4), inset 0 0 20px rgba(244, 63, 94, 0.2);
     }
@@ -927,7 +1012,7 @@ body {
 
 .ft-btn span {
     font-size: 8px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 1px;
     text-transform: uppercase;
 }
@@ -968,7 +1053,7 @@ body {
     background: #f59e0b;
     color: #fff;
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 400;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -998,8 +1083,8 @@ body {
 }
 
 .i-dot {
-    width: 18px;
-    height: 3px;
+    width: 6px;
+    height: 6px;
     border-radius: 99px;
     background: rgba(255, 255, 255, 0.07);
     transition: background .3s;
@@ -1092,7 +1177,7 @@ body {
 .lc-title {
     font-family: var(--mono);
     font-size: 22px;
-    font-weight: 900;
+    font-weight: 600;
     text-align: center;
     letter-spacing: -0.3px;
 }
@@ -1124,7 +1209,7 @@ body {
 
 .lc-stat-label {
     font-size: 8px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 1.5px;
     color: var(--muted);
     text-transform: uppercase;
@@ -1133,7 +1218,7 @@ body {
 
 .lc-stat-val {
     font-size: 19px;
-    font-weight: 900;
+    font-weight: 600;
     font-family: var(--mono);
 }
 
@@ -1145,7 +1230,7 @@ body {
     color: #fff;
     font-family: var(--mono);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 2px;
     cursor: pointer;
     border: none;
@@ -1174,7 +1259,7 @@ body {
 .modal-title {
     font-family: var(--mono);
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 1px;
 }
 
@@ -1367,6 +1452,72 @@ body {
     z-index: 150;
 }
 
+/* Install Modal Specifics */
+.install-box {
+    text-align: center;
+}
+
+.install-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--acc), var(--acc2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+    color: #fff;
+    box-shadow: 0 10px 20px var(--glow);
+}
+
+.install-title {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.install-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.install-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.install-btn-main {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--acc), var(--acc2));
+    border: none;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--glow);
+}
+
+.install-btn-dismiss {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+}
+
 /* PWA splash (shown briefly on load) */
 #splash {
     position: fixed;
@@ -1389,7 +1540,7 @@ body {
 .splash-logo {
     font-family: var(--mono);
     font-size: 36px;
-    font-weight: 900;
+    font-weight: 600;
     background: linear-gradient(135deg, var(--acc), var(--acc2));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

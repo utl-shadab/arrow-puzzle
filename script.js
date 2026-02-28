@@ -14,14 +14,14 @@ const S = {
 
 function loadPersist() {
     try {
-        const d = JSON.parse(localStorage.getItem('tapaway_v3') || '{}');
+        const d = JSON.parse(localStorage.getItem('tapaway_v4') || '{}');
         ['level', 'xp', 'streak', 'bestLevel', 'bestXP', 'bestStreak', 'difficulty', 'soundOn', 'vibOn'].forEach(k => {
             if (d[k] !== undefined) S[k] = d[k];
         });
     } catch (e) { }
 }
 function savePersist() {
-    localStorage.setItem('tapaway_v3', JSON.stringify({
+    localStorage.setItem('tapaway_v4', JSON.stringify({
         level: S.level, xp: S.xp, streak: S.streak,
         bestLevel: S.bestLevel, bestXP: S.bestXP, bestStreak: S.bestStreak,
         difficulty: S.difficulty, soundOn: S.soundOn, vibOn: S.vibOn,
@@ -99,40 +99,50 @@ function getGridSize(level, diff) {
     // hard
     if (level <= 3) return 7;
     if (level <= 8) return 8;
-    if (level <= 18) return 9;
+    if (level <= 14) return 10; // Hard hits 10x10 by level 14
     return 10;
 }
 
 function getArrowCount(level, diff, gs) {
-    const base = { easy: 0.42, medium: 0.52, hard: 0.63 }[diff];
-    const levelScale = 1 + level * 0.018;
-    return Math.min(Math.floor(gs * gs * base * levelScale), Math.floor(gs * gs * 0.82));
+    const base = { easy: 0.52, medium: 0.68, hard: 0.82 }[diff];
+    const levelScale = 1 + level * 0.012; // +1.2% per level
+    return Math.min(Math.floor(gs * gs * base * levelScale), Math.floor(gs * gs * 0.90));
 }
 
 function generateLevel(level, diff) {
     const gs = getGridSize(level, diff);
     const targetCount = getArrowCount(level, diff, gs);
-    const arrows = [];
+    let arrows = [];
     const occupied = new Set();
+
+    // We generate by starting with an empty grid and adding arrows that *would* be removable
+    // if we were playing the game in REVERSE. This guarantees solvability while allowing
+    // for complex dependency chains.
+
     let attempts = 0;
-    const maxAttempts = 5000;
+    const maxAttempts = gs * gs * 10;
 
     while (arrows.length < targetCount && attempts < maxAttempts) {
         attempts++;
         const x = Math.floor(Math.random() * gs);
         const y = Math.floor(Math.random() * gs);
+
         if (occupied.has(`${x},${y}`)) continue;
+
         const dir = DIRS[Math.floor(Math.random() * 4)];
-        const tmp = { id: 'tmp', x, y, dir, removing: false };
-        if (canRemove(tmp, arrows, gs)) {
-            arrows.push({ id: uid(), x, y, dir, removing: false });
+        const candidate = { id: uid(), x, y, dir, removing: false };
+
+        // In "Reverse Generation": An arrow can be placed if its path is clear 
+        // to the edge of the board, considering currently placed arrows as obstacles
+        // that represent the sequence of moves.
+        if (canRemove(candidate, arrows, gs)) {
+            arrows.push(candidate);
             occupied.add(`${x},${y}`);
         }
     }
 
-    // Safety: ensure at least 1 removable
-    const hasMoves = arrows.some(a => canRemove(a, arrows, gs));
-    if (!hasMoves && arrows.length > 0) arrows.pop();
+    // Shuffle to ensure no predictable patterns in removal order
+    arrows = arrows.sort(() => Math.random() - 0.5);
 
     return { arrows, gridSize: gs };
 }
@@ -270,6 +280,26 @@ function renderBoard(animIn = false) {
 
     updateBoardInfo();
     updateHeader();
+    updateDeadEnds(false); // Update visuals immediately without "new" animation
+}
+
+function updateDeadEnds(animateNew = true) {
+    S.arrows.forEach(a => {
+        if (a.removing) return;
+        const wasDead = a.isDeadEnd;
+        const isDead = !canRemove(a, S.arrows, S.gridSize);
+        a.isDeadEnd = isDead;
+
+        const el = getTileEl(a.id);
+        if (el) {
+            el.classList.toggle('dead-end', isDead);
+            if (animateNew && isDead && !wasDead) {
+                el.classList.remove('dead-end-new');
+                void el.offsetWidth;
+                el.classList.add('dead-end-new');
+            }
+        }
+    });
 }
 
 function getTileEl(id) {
@@ -430,6 +460,7 @@ function onTap(id, tileEl) {
             S.arrows = S.arrows.filter(a => a.id !== id);
             const remaining = S.arrows.filter(a => !a.removing).length;
             updateBoardInfo();
+            updateDeadEnds(true); // Check for new dead-ends after move
             if (remaining === 0) {
                 onLevelComplete();
             }
@@ -564,9 +595,11 @@ function initLevel(animIn = true) {
     S.history = [];
     S.combo = 0;
     S.totalArrows = arrows.length;
+    savePersist(); // Level is always saved on init
     closeAllModals();
     updateHeader();
     renderBoard(animIn);
+    updateDeadEnds(false); // Initial dead-end check
 }
 
 function onLevelComplete() {
@@ -679,6 +712,10 @@ function syncDiffUI() {
     ['easy', 'medium', 'hard'].forEach(d => {
         document.getElementById(`sg-${d}`).classList.toggle('active', d === S.difficulty);
     });
+
+    // Update start screen status chip
+    const diffLabel = { easy: 'EASY', medium: 'MEDIUM', hard: 'HARD' }[S.difficulty];
+    document.getElementById('last-level-val').textContent = `LEVEL ${S.level} · ${diffLabel}`;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -693,10 +730,17 @@ document.querySelectorAll('#start-diff-tabs .diff-opt').forEach(b => {
     });
 });
 
-// Start button
+// Start button (NEW GAME)
 document.getElementById('start-btn').addEventListener('click', () => {
     try { actxGet(); } catch (e) { }
     S.level = 1; S.hearts = S.maxHearts;
+    initLevel(true);
+    showScreen('game-screen');
+});
+
+// Continue button
+document.getElementById('continue-btn').addEventListener('click', () => {
+    try { actxGet(); } catch (e) { }
     initLevel(true);
     showScreen('game-screen');
 });
@@ -773,59 +817,49 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
 // ════════════════════════════════════════════════════════════
-//  PWA: inline manifest + service worker
+//  PWA: Service Worker + Install Prompt
 // ════════════════════════════════════════════════════════════
-(function setupPWA() {
-    // Inline manifest as data URL
-    const manifest = {
-        name: 'Tap Away — Arrow Puzzle',
-        short_name: 'Tap Away',
-        description: 'Endless addictive arrow puzzle game',
-        start_url: '.',
-        display: 'standalone',
-        orientation: 'portrait',
-        theme_color: '#05060f',
-        background_color: '#05060f',
-        icons: [
-            {
-                src: 'screen.png',
-                sizes: '640x640',
-                type: 'image/png'
-            }
-        ],
-        screenshots: [
-            {
-                src: 'screen.png',
-                sizes: '640x640',
-                type: 'image/png',
-                form_factor: 'narrow'
-            }
-        ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+let deferredPrompt = null;
 
-    // Service Worker for offline support
-    if ('serviceWorker' in navigator) {
-        const swCode = `
-const CACHE='tapaway-v3';
-const ASSETS=['/', 'screen.png'];
-self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{}));
-  self.skipWaiting();
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW Registered'))
+            .catch(err => console.log('SW Registration Failed', err));
+    });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Show the install modal after a small delay on the start screen
+    setTimeout(() => {
+        if (document.getElementById('start-screen').classList.contains('active')) {
+            openModal('install-modal');
+        }
+    }, 3000);
 });
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch',e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response('Offline',{status:503}))));
-});`;
-        const swBlob = new Blob([swCode], { type: 'application/javascript' });
-        const swURL = URL.createObjectURL(swBlob);
-        navigator.serviceWorker.register(swURL).catch(() => { });
+
+document.getElementById('install-confirm-btn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        deferredPrompt = null;
+        closeModal('install-modal');
     }
-})();
+});
+
+document.getElementById('install-cancel-btn').addEventListener('click', () => {
+    closeModal('install-modal');
+});
+
+window.addEventListener('appinstalled', (evt) => {
+    console.log('Tap Away was installed.');
+    closeModal('install-modal');
+});
 
 // ════════════════════════════════════════════════════════════
 //  INIT: update start screen from saved data, hide splash

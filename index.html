@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Tap Away" />
     <link rel="apple-touch-icon" href="screen.png">
-    <link rel="manifest" href="#" id="manifest-link" />
+    <link rel="manifest" href="manifest.json" />
     <title>Tap Away — Arrow Puzzle</title>
 
     <!-- Font Awesome -->
@@ -28,7 +28,8 @@
 
     <!-- PWA Splash -->
     <div id="splash">
-        <img src="screen.png" class="splash-img" style="width:120px;height:120px;margin-bottom:20px;border-radius:24px;box-shadow:0 0 30px var(--glow);">
+        <img src="screen.png" class="splash-img"
+            style="width:120px;height:120px;margin-bottom:20px;border-radius:24px;box-shadow:0 0 30px var(--glow);">
         <div class="splash-logo">TAP AWAY</div>
         <div class="splash-sub">Arrow Puzzle</div>
         <div class="splash-loader">
@@ -82,15 +83,26 @@
                     Clear arrows by tapping when their path is free. Think ahead — one wrong move costs a life!
                 </p>
 
+                <!-- Current Progress Chip -->
+                <div class="status-chip" id="last-level-chip">
+                    <span class="chip-label">RESUME</span>
+                    <span class="chip-val" id="last-level-val">LEVEL 1 · EASY</span>
+                </div>
+
                 <div class="diff-select-wrap" id="start-diff-tabs">
                     <button class="diff-opt active" data-d="easy">Easy</button>
                     <button class="diff-opt" data-d="medium">Medium</button>
                     <button class="diff-opt" data-d="hard">Hard</button>
                 </div>
 
-                <button class="start-btn" id="start-btn" style="margin-top:20px;">
-                    <i class="fa-solid fa-play" style="margin-right:8px;"></i> PLAY NOW
-                </button>
+                <div class="start-btns-row">
+                    <button class="start-btn secondary" id="continue-btn">
+                        <i class="fas fa-history"></i> Resume
+                    </button>
+                    <button class="start-btn" id="start-btn">
+                        <i class="fas fa-play"></i> NEW GAME
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -235,6 +247,20 @@
             <div class="go-sub" id="go-sub">Level 1 — you ran out of lives</div>
             <button class="go-retry" id="go-retry-btn"><i class="fa-solid fa-rotate"></i> TRY AGAIN</button>
             <button class="go-menu" id="go-menu-btn"><i class="fa-solid fa-house"></i> MAIN MENU</button>
+        </div>
+    </div>
+
+    <!-- ░░░ INSTALL PROMPT MODAL ░░░ -->
+    <div class="modal-overlay" id="install-modal">
+        <div class="modal-box install-box">
+            <div class="install-icon"><i class="fa-solid fa-download"></i></div>
+            <div class="install-title">INSTALL GAME</div>
+            <div class="install-sub">Install Tap Away on your home screen for the best experience and offline play.
+            </div>
+            <div class="install-btns">
+                <button class="install-btn-main" id="install-confirm-btn">INSTALL NOW</button>
+                <button class="install-btn-dismiss" id="install-cancel-btn">MAYBE LATER</button>
+            </div>
         </div>
     </div>
 
