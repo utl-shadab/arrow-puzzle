@@ -61,6 +61,21 @@ function canRemove(arrow, arrows, gs) {
     return true;
 }
 
+// Returns info about WHY a move is blocked: which arrow is blocking & the free cells before it
+function getBlockInfo(arrow, arrows, gs) {
+    const { x: dx, y: dy } = OFF[arrow.dir];
+    let cx = arrow.x + dx, cy = arrow.y + dy;
+    const freePath = [];
+    const blockers = [];
+    while (!oob(cx, cy, gs)) {
+        const blocker = arrows.find(a => a.x === cx && a.y === cy && !a.removing);
+        if (blocker) { blockers.push(blocker); break; }
+        freePath.push({ x: cx, y: cy });
+        cx += dx; cy += dy;
+    }
+    return { blockers, freePath };
+}
+
 // Difficulty grid size table: [easy, medium, hard]
 // Returns grid size for given level and difficulty
 function getGridSize(level, diff) {
@@ -417,17 +432,54 @@ function onTap(id, tileEl) {
         });
 
     } else {
-        // Invalid tap
-        if (tileEl) {
-            tileEl.classList.remove('shake');
-            void tileEl.offsetWidth; // reflow
-            tileEl.classList.add('shake');
-            setTimeout(() => tileEl.classList.remove('shake'), 400);
-        }
-        sfxErr();
-        vibe([50, 30, 50]);
+        // ── INVALID TAP: show boundary / blocker error feedback ──
         S.combo = 0;
         S.hearts--;
+
+        const { blockers, freePath } = getBlockInfo(arrow, S.arrows, S.gridSize);
+
+        // 1. Self tile: red shake + blocked-self flash
+        if (tileEl) {
+            tileEl.classList.remove('blocked-self', 'shake');
+            void tileEl.offsetWidth;
+            tileEl.classList.add('blocked-self');
+
+            // Show floating error tooltip above tile
+            const dirLabel = { up: 'BLOCKED ABOVE', down: 'BLOCKED BELOW', left: 'BLOCKED LEFT', right: 'BLOCKED RIGHT' }[arrow.dir];
+            const tip = document.createElement('div');
+            tip.className = 'err-tooltip';
+            tip.textContent = blockers.length ? dirLabel : 'WALL';
+            tileEl.style.position = 'relative';
+            tileEl.appendChild(tip);
+            setTimeout(() => { tip.remove(); tileEl.classList.remove('blocked-self'); }, 600);
+        }
+
+        // 2. Show free path cells with a faint red trail
+        const STEP = 40;
+        freePath.forEach((pos, i) => {
+            setTimeout(() => {
+                const cell = document.querySelector(`.tile-cell[data-cx="${pos.x}"][data-cy="${pos.y}"]`);
+                if (!cell) return;
+                cell.classList.add('blocked-path-trail');
+                setTimeout(() => cell.classList.remove('blocked-path-trail'), 520);
+            }, i * STEP);
+        });
+
+        // 3. Blocker arrow: bold red pulse to clearly show WHY
+        const blockerDelay = freePath.length * STEP;
+        blockers.forEach(blocker => {
+            setTimeout(() => {
+                const bTile = document.querySelector(`.arr-tile[data-id="${blocker.id}"]`);
+                if (!bTile) return;
+                bTile.classList.remove('blocker-flash');
+                void bTile.offsetWidth;
+                bTile.classList.add('blocker-flash');
+                setTimeout(() => bTile.classList.remove('blocker-flash'), 650);
+            }, blockerDelay);
+        });
+
+        sfxErr();
+        vibe([50, 30, 50]);
         renderHearts();
         if (S.hearts <= 0) setTimeout(onGameOver, 700);
     }
@@ -713,7 +765,7 @@ document.addEventListener('touchmove', e => e.preventDefault(), { passive: false
     const manifest = {
         name: 'Tap Away — Arrow Puzzle',
         short_name: 'Tap Away',
-        description: 'Endless arrow puzzle game',
+        description: 'Endless addictive arrow puzzle game',
         start_url: '.',
         display: 'standalone',
         orientation: 'portrait',
@@ -721,8 +773,8 @@ document.addEventListener('touchmove', e => e.preventDefault(), { passive: false
         background_color: '#05060f',
         icons: [
             {
-                src: "/screen.png",
-                sizes: '512x512', type: 'image/png'
+                src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%2305060f'/%3E%3Ctext y='360' x='100' font-size='320' font-family='serif'%3E%F0%9F%8E%AF%3C/text%3E%3C/svg%3E",
+                sizes: '512x512', type: 'image/svg+xml'
             }
         ]
     };
