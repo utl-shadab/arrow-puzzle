@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+    <meta name="theme-color" content="#05060f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tap Away" />
+    <link rel="manifest" href="#" id="manifest-link" />
+    <title>Tap Away — Arrow Puzzle</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- PWA Splash -->
+    <div id="splash">
+        <div style="font-size:52px;">🎯</div>
+        <div class="splash-logo">TAP AWAY</div>
+        <div class="splash-sub">Arrow Puzzle</div>
+        <div class="splash-loader">
+            <div class="splash-loader-fill"></div>
+        </div>
+    </div>
+
+    <!-- Confetti canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="app">
+
+        <!-- ░░░ START SCREEN ░░░ -->
+        <div id="start-screen" class="screen active">
+            <canvas id="start-bg-canvas"></canvas>
+            <div class="start-content">
+                <div class="start-logo-wrap">
+                    <div class="start-icon-grid">
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-up"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-up"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-left"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-star"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-down"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-left"></i></div>
+                        <div class="start-icon-cell"><i class="fa-solid fa-arrow-down"></i></div>
+                    </div>
+                    <div class="start-title">TAP AWAY</div>
+                    <div class="start-subtitle">∞ Arrow Puzzle</div>
+                </div>
+
+                <div class="best-score-row">
+                    <div class="best-item">
+                        <span class="best-val" id="best-level">1</span>
+                        <span class="best-label">Best Level</span>
+                    </div>
+                    <div style="width:1px;height:28px;background:var(--border);"></div>
+                    <div class="best-item">
+                        <span class="best-val" id="best-xp">0</span>
+                        <span class="best-label">Total XP</span>
+                    </div>
+                    <div style="width:1px;height:28px;background:var(--border);"></div>
+                    <div class="best-item">
+                        <span class="best-val" id="best-streak">0</span>
+                        <span class="best-label">Best Streak</span>
+                    </div>
+                </div>
+
+                <p class="start-desc" style="margin-top:18px;">
+                    Clear arrows by tapping when their path is free. Think ahead — one wrong move costs a life!
+                </p>
+
+                <div class="diff-select-wrap" id="start-diff-tabs">
+                    <button class="diff-opt active" data-d="easy">Easy</button>
+                    <button class="diff-opt" data-d="medium">Medium</button>
+                    <button class="diff-opt" data-d="hard">Hard</button>
+                </div>
+
+                <button class="start-btn" id="start-btn" style="margin-top:20px;">
+                    <i class="fa-solid fa-play" style="margin-right:8px;"></i> PLAY NOW
+                </button>
+            </div>
+        </div>
+
+        <!-- ░░░ GAME SCREEN ░░░ -->
+        <div id="game-screen" class="screen">
+
+            <!-- Combo Banner -->
+            <div class="combo-banner" id="combo-banner">🔥 3x COMBO!</div>
+
+            <!-- Header -->
+            <div class="hdr">
+                <button class="hdr-back" id="back-btn" title="Menu">
+                    <i class="fa-solid fa-chevron-left" style="font-size:13px;"></i>
+                </button>
+                <div class="hdr-center">
+                    <span class="hdr-level" id="hdr-level">LEVEL 1</span>
+                    <span class="hdr-diff" id="hdr-diff">Easy · 5×5</span>
+                </div>
+                <div class="hdr-right">
+                    <div class="hearts-row" id="hearts-row"></div>
+                    <button class="ft-btn" id="settings-btn"
+                        style="width:36px;height:36px;padding:0;flex:none;border-radius:10px;">
+                        <i class="fa-solid fa-gear" style="font-size:14px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- XP Progress -->
+            <div class="prog-row">
+                <span class="prog-label" id="prog-label">LV.1</span>
+                <div class="prog-track">
+                    <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+                </div>
+                <span class="prog-label" id="xp-label">0 XP</span>
+            </div>
+
+            <!-- Board info -->
+            <div class="board-info">
+                <span class="info-left" id="info-left">0 removed</span>
+                <div class="info-dots" id="info-dots"></div>
+                <span class="info-right" id="info-right">0 moves</span>
+            </div>
+
+            <!-- Board -->
+            <div class="board-area">
+                <div class="board-outer" id="board-outer">
+                    <div class="dot-grid-overlay" id="dot-grid"></div>
+                    <div class="board-grid" id="board-grid"></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <button class="ft-btn" id="restart-btn">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Restart</span>
+                </button>
+                <div class="hint-wrap" id="hint-wrap">
+                    <button class="ft-btn primary" id="hint-btn">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>Hint</span>
+                    </button>
+                    <div class="hint-badge" id="hint-badge">3</div>
+                </div>
+                <button class="ft-btn" id="undo-btn">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Undo</span>
+                </button>
+            </div>
+
+        </div>
+
+    </div><!-- #app -->
+
+    <!-- ░░░ LEVEL COMPLETE MODAL ░░░ -->
+    <div class="modal-overlay" id="lc-modal">
+        <div class="modal-box">
+            <div class="lc-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="lc-title">CLEARED!</div>
+            <div class="lc-sub" id="lc-sub">Level 1 complete</div>
+            <div class="lc-stats">
+                <div class="lc-stat">
+                    <span class="lc-stat-label">Moves</span>
+                    <span class="lc-stat-val" id="lc-moves">0</span>
+                </div>
+                <div class="lc-stat">
+                    <span class="lc-stat-label">XP</span>
+                    <span class="lc-stat-val" style="color:var(--acc)" id="lc-xp">+50</span>
+                </div>
+                <div class="lc-stat">
+                    <span class="lc-stat-label">Streak</span>
+                    <span class="lc-stat-val" style="color:#f59e0b" id="lc-streak">1x</span>
+                </div>
+            </div>
+            <button class="lc-next" id="lc-next-btn">NEXT LEVEL <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- ░░░ SETTINGS MODAL ░░░ -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-box">
+            <div class="modal-title-row">
+                <span class="modal-title">SETTINGS</span>
+                <button class="close-btn" id="settings-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="set-row">
+                <div class="set-left"><i class="fa-solid fa-volume-high"></i><span class="set-label">Sound</span></div>
+                <div class="tog-track on" id="sound-tog">
+                    <div class="tog-thumb"></div>
+                </div>
+            </div>
+            <div class="set-row">
+                <div class="set-left"><i class="fa-solid fa-mobile-screen"></i><span class="set-label">Vibration</span>
+                </div>
+                <div class="tog-track on" id="vib-tog">
+                    <div class="tog-thumb"></div>
+                </div>
+            </div>
+            <div class="set-row">
+                <div class="set-left"><i class="fa-solid fa-gauge-high"></i><span class="set-label">Difficulty</span>
+                </div>
+                <div style="display:flex;gap:5px;">
+                    <button class="diff-opt active" data-d="easy" id="sg-easy">E</button>
+                    <button class="diff-opt" data-d="medium" id="sg-medium">M</button>
+                    <button class="diff-opt" data-d="hard" id="sg-hard">H</button>
+                </div>
+            </div>
+            <button class="reset-row" id="reset-progress-btn"><i class="fa-solid fa-trash"></i> Reset Progress</button>
+            <div class="info-tip">
+                <i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>
+                Tap an arrow only when its entire path in that direction is clear. Plan chains — combo removes multiply
+                your XP!
+            </div>
+        </div>
+    </div>
+
+    <!-- ░░░ GAME OVER MODAL ░░░ -->
+    <div class="modal-overlay" id="go-modal">
+        <div class="modal-box">
+            <div class="go-icon">💔</div>
+            <div class="go-title">GAME OVER</div>
+            <div class="go-sub" id="go-sub">Level 1 — you ran out of lives</div>
+            <button class="go-retry" id="go-retry-btn"><i class="fa-solid fa-rotate"></i> TRY AGAIN</button>
+            <button class="go-menu" id="go-menu-btn"><i class="fa-solid fa-house"></i> MAIN MENU</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
