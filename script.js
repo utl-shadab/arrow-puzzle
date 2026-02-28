@@ -61,6 +61,10 @@ function canRemove(arrow, arrows, gs) {
     return true;
 }
 
+function canAnyMove() {
+    return S.arrows.some(a => !a.removing && canRemove(a, S.arrows, S.gridSize));
+}
+
 // Returns info about WHY a move is blocked: which arrow is blocking & the free cells before it
 function getBlockInfo(arrow, arrows, gs) {
     const { x: dx, y: dy } = OFF[arrow.dir];
@@ -481,6 +485,17 @@ function onTap(id, tileEl) {
         sfxErr();
         vibe([50, 30, 50]);
         renderHearts();
+
+        if (!canAnyMove()) {
+            const board = document.getElementById('board-outer');
+            if (board) {
+                board.classList.remove('board-stuck');
+                void board.offsetWidth;
+                board.classList.add('board-stuck');
+                setTimeout(() => board.classList.remove('board-stuck'), 600);
+            }
+        }
+
         if (S.hearts <= 0) setTimeout(onGameOver, 700);
     }
 }
@@ -773,8 +788,17 @@ document.addEventListener('touchmove', e => e.preventDefault(), { passive: false
         background_color: '#05060f',
         icons: [
             {
-                src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%2305060f'/%3E%3Ctext y='360' x='100' font-size='320' font-family='serif'%3E%F0%9F%8E%AF%3C/text%3E%3C/svg%3E",
-                sizes: '512x512', type: 'image/svg+xml'
+                src: 'screen.png',
+                sizes: '640x640',
+                type: 'image/png'
+            }
+        ],
+        screenshots: [
+            {
+                src: 'screen.png',
+                sizes: '640x640',
+                type: 'image/png',
+                form_factor: 'narrow'
             }
         ]
     };
@@ -785,7 +809,7 @@ document.addEventListener('touchmove', e => e.preventDefault(), { passive: false
     if ('serviceWorker' in navigator) {
         const swCode = `
 const CACHE='tapaway-v3';
-const ASSETS=['/'];
+const ASSETS=['/', 'screen.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{}));
   self.skipWaiting();
