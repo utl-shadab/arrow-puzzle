@@ -696,7 +696,7 @@ document.querySelectorAll('#start-diff-tabs .diff-opt').forEach(b => {
 // Start button
 document.getElementById('start-btn').addEventListener('click', () => {
     try { actxGet(); } catch (e) { }
-    S.level = 1; S.hearts = S.maxHearts;
+    S.hearts = S.maxHearts;
     initLevel(true);
     showScreen('game-screen');
 });
@@ -773,57 +773,11 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
 // ════════════════════════════════════════════════════════════
-//  PWA: inline manifest + service worker
+//  PWA SETUP
 // ════════════════════════════════════════════════════════════
 (function setupPWA() {
-    // Inline manifest as data URL
-    const manifest = {
-        name: 'Tap Away — Arrow Puzzle',
-        short_name: 'Tap Away',
-        description: 'Endless addictive arrow puzzle game',
-        start_url: '.',
-        display: 'standalone',
-        orientation: 'portrait',
-        theme_color: '#05060f',
-        background_color: '#05060f',
-        icons: [
-            {
-                src: 'screen.png',
-                sizes: '640x640',
-                type: 'image/png'
-            }
-        ],
-        screenshots: [
-            {
-                src: 'screen.png',
-                sizes: '640x640',
-                type: 'image/png',
-                form_factor: 'narrow'
-            }
-        ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    document.getElementById('manifest-link').href = URL.createObjectURL(blob);
-
-    // Service Worker for offline support
     if ('serviceWorker' in navigator) {
-        const swCode = `
-const CACHE='tapaway-v3';
-const ASSETS=['/', 'screen.png'];
-self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{}));
-  self.skipWaiting();
-});
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch',e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response('Offline',{status:503}))));
-});`;
-        const swBlob = new Blob([swCode], { type: 'application/javascript' });
-        const swURL = URL.createObjectURL(swBlob);
-        navigator.serviceWorker.register(swURL).catch(() => { });
+        navigator.serviceWorker.register('sw.js').catch(() => { });
     }
 })();
 

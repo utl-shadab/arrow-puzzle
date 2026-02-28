@@ -1,0 +1,25 @@
+{
+    "name": "Tap Away — Arrow Puzzle",
+    "short_name": "Tap Away",
+    "description": "Endless addictive arrow puzzle game",
+    "start_url": ".",
+    "display": "standalone",
+    "orientation": "portrait",
+    "theme_color": "#05060f",
+    "background_color": "#05060f",
+    "icons": [
+        {
+            "src": "screen.png",
+            "sizes": "640x640",
+            "type": "image/png"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "screen.png",
+            "sizes": "640x640",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ]
+}
